@@ -1,0 +1,4 @@
+[submodule "VirtualApp"]
+	path = VirtualApp
+	url = https://github.com/247321453/VirtualApp.git
+	branch = master
