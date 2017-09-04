@@ -43,6 +43,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
 
         @Override
         public void onServiceDisconnected(ComponentName name) {
+            Log.i("server", "onServiceDisconnected");
             mClient = null;
         }
     };
@@ -146,9 +147,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
                 Toast.makeText(context, "应用卸载", Toast.LENGTH_SHORT).show();
                 String packageName = intent.getData().getSchemeSpecificPart();
                 updateButton(false);
-                if(mServiceConnection != null) {
-                    VActivityManager.get().unbindService(mServiceConnection);
-                }
+                VActivityManager.get().unbindService(MainActivity.this, mServiceConnection);
                 mClient = null;
             }
         }
@@ -164,20 +163,32 @@ public class MainActivity extends Activity implements View.OnClickListener {
     @Override
     protected void onDestroy() {
         unregisterReceiver(mBroadcastReceiver);
-        if(mClient != null) {
-            VActivityManager.get().unbindService(mServiceConnection);
+        if (mClient != null) {
+            VActivityManager.get().unbindService(this, mServiceConnection);
         }
         super.onDestroy();
     }
 
+    private long lasttime;
+    private int lastId;
+
     @Override
     public void onClick(View v) {
+        if (lastId == v.getId()) {
+            if (System.currentTimeMillis() - lasttime < 1000) {
+                return;
+            }
+        }
+        lasttime = System.currentTimeMillis();
+        lastId = v.getId();
         switch (v.getId()) {
             case R.id.btn_service:
-                VActivityManager.get().bindService(this,
-                        new Intent(Config.ACTION_BIND_CLIENT)
-                                .setPackage(Config.CLIENT_PKG),
-                        mServiceConnection, BIND_AUTO_CREATE);
+                if (mClient == null) {
+                    VActivityManager.get().bindService(this,
+                            new Intent(Config.ACTION_BIND_CLIENT)
+                                    .setPackage(Config.CLIENT_PKG),
+                            mServiceConnection, BIND_AUTO_CREATE);
+                }
                 break;
             case R.id.btn_open:
                 lunchApp(AppTarget.get(this));

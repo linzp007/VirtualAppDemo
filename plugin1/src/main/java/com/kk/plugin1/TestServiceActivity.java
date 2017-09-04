@@ -28,6 +28,7 @@ public class TestServiceActivity extends AppCompatActivity {
 
         @Override
         public void onServiceDisconnected(ComponentName name) {
+            Log.i("client", "onServiceDisconnected");
             mServer = null;
         }
     };
