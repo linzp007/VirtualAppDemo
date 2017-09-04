@@ -32,7 +32,7 @@ public class AppTarget {
     private static final String PKG = "com.kk.plugin1";
     private Context mContext;
     private final SharedPreferences mSharedPreferences;
-    private String mApkFile;
+    private String mApkFile,mUpdateFile;
     private boolean fromSystem, firstInstall;
 
     private AppTarget(Context context) {
@@ -41,6 +41,7 @@ public class AppTarget {
         fromSystem = mSharedPreferences.getBoolean("fromSystem", false);
         firstInstall = mSharedPreferences.getBoolean("install", false);
         mApkFile = new File(Environment.getExternalStorageDirectory(), "app.apk").getAbsolutePath();
+        mUpdateFile = mApkFile;
         if (!firstInstall) {
             PackageInfo packageInfo = PackageUtils.getPackageInfo(context, PKG);
             if (packageInfo != null) {
@@ -78,6 +79,10 @@ public class AppTarget {
      */
     public String getInstallPackagePath() {
         return mApkFile;
+    }
+
+    public String getUpdateFile() {
+        return mUpdateFile;
     }
 
     /**

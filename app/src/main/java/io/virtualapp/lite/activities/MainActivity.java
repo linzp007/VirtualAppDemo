@@ -8,17 +8,21 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
+import android.content.pm.PackageInfo;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.RemoteException;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.lody.virtual.client.core.InstallStrategy;
 import com.lody.virtual.client.core.VirtualCore;
 import com.lody.virtual.client.ipc.VActivityManager;
+import com.lody.virtual.os.VUserHandle;
+import com.lody.virtual.remote.InstalledAppInfo;
 
 import java.io.File;
 
@@ -48,7 +52,8 @@ public class MainActivity extends Activity implements View.OnClickListener {
         }
     };
     private IClient mClient;
-    private Button mBtnService, mBtnOpen, mBtnInstall, mBtnDelete;
+    private TextView mVerView;
+    private Button mBtnService, mBtnOpen, mBtnInstall, mBtnDelete, mBtnUpdate;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -60,14 +65,17 @@ public class MainActivity extends Activity implements View.OnClickListener {
         intentFilter.addAction(App.ACTION_PACKAGE_REMOVE);
         intentFilter.addDataScheme("package");
         registerReceiver(mBroadcastReceiver, intentFilter);
+        mVerView = (TextView) findViewById(R.id.tv_ver);
         mBtnService = (Button) findViewById(R.id.btn_service);
         mBtnOpen = (Button) findViewById(R.id.btn_open);
         mBtnInstall = (Button) findViewById(R.id.btn_install);
         mBtnDelete = (Button) findViewById(R.id.btn_delete);
+        mBtnUpdate = (Button) findViewById(R.id.btn_update);
         mBtnService.setOnClickListener(this);
         mBtnInstall.setOnClickListener(this);
         mBtnDelete.setOnClickListener(this);
         mBtnOpen.setOnClickListener(this);
+        mBtnUpdate.setOnClickListener(this);
         Log.d("server", "test log");
         AppTarget appTarget = AppTarget.get(this);
         if (VirtualCore.get().isAppInstalled(appTarget.getPackageName())) {
@@ -97,7 +105,11 @@ public class MainActivity extends Activity implements View.OnClickListener {
                 return null;
             }
             //对比版本InstallStrategy.COMPARE_VERSION
-            return VirtualCore.get().installPackage(file.getAbsolutePath(), InstallStrategy.COMPARE_VERSION);
+            int flags = InstallStrategy.COMPARE_VERSION;
+            if (appTarget.isInstallBySystemApp()) {
+                flags |= InstallStrategy.DEPEND_SYSTEM_IF_EXIST;
+            }
+            return VirtualCore.get().installPackage(file.getAbsolutePath(), flags);
         }).done((rs) -> {
             dialog.dismiss();
             if (rs == null) {
@@ -158,6 +170,20 @@ public class MainActivity extends Activity implements View.OnClickListener {
         mBtnInstall.setEnabled(!install);
         mBtnDelete.setEnabled(install);
         mBtnService.setEnabled(install);
+        mBtnUpdate.setEnabled(install);
+        if (install) {
+            InstalledAppInfo installedAppInfo = VirtualCore.get().getInstalledAppInfo(AppTarget.get(this).getPackageName(), 0);
+            if (installedAppInfo == null) {
+                mVerView.setText("获取安装信息失败");
+            } else {
+                PackageInfo packageInfo = installedAppInfo.getPackageInfo(0);
+                if (packageInfo == null) {
+                    mVerView.setText("获取包信息失败");
+                } else {
+                    mVerView.setText(packageInfo.versionName + "(" + packageInfo.versionCode + ")");
+                }
+            }
+        }
     }
 
     @Override
@@ -198,6 +224,24 @@ public class MainActivity extends Activity implements View.OnClickListener {
                 break;
             case R.id.btn_delete:
                 uninstallApp(AppTarget.get(this));
+                break;
+            case R.id.btn_update:
+                File file = new File(AppTarget.get(this).getUpdateFile());
+                if (!file.exists()) {
+                    Toast.makeText(this, "sdcard的安装包不存在\n" + file.getAbsolutePath(), Toast.LENGTH_LONG).show();
+                    return;
+                }
+                //停止运行
+                VirtualCore.get().killApp(AppTarget.get(this).getPackageName(), VUserHandle.USER_ALL);
+                VUiKit.defer().when(() -> {
+                    return VirtualCore.get().installPackage(file.getAbsolutePath(), InstallStrategy.UPDATE_IF_EXIST);
+                }).done(rs -> {
+                    if (rs == null || !rs.isSuccess) {
+                        Toast.makeText(this, "更新失败", Toast.LENGTH_SHORT).show();
+                    } else {
+                        Toast.makeText(this, "更新成功", Toast.LENGTH_SHORT).show();
+                    }
+                });
                 break;
         }
     }
