@@ -41,8 +41,6 @@ public class App extends Application {
             @Override
             public void onMainProcess() {
                 //TODO 主进程初始化
-                //监听全部插件的安装和卸载
-                virtualCore.registerObserver(new MyPackageObserver(App.this));
             }
 
             @Override
@@ -57,6 +55,8 @@ public class App extends Application {
 
             @Override
             public void onServerProcess() {
+                //监听全部插件的安装和卸载
+                virtualCore.registerObserver(new MyPackageObserver(App.this));
                 //服务会通知 通过intent的安装/卸载
                 virtualCore.setAppRequestListener(new MyAppRequestListener(App.this));
                 //允许内部app调用外部的app名单

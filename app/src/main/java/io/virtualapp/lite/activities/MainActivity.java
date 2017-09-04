@@ -146,7 +146,9 @@ public class MainActivity extends Activity implements View.OnClickListener {
                 Toast.makeText(context, "应用卸载", Toast.LENGTH_SHORT).show();
                 String packageName = intent.getData().getSchemeSpecificPart();
                 updateButton(false);
-                VActivityManager.get().unbindService(mServiceConnection);
+                if(mServiceConnection != null) {
+                    VActivityManager.get().unbindService(mServiceConnection);
+                }
                 mClient = null;
             }
         }
