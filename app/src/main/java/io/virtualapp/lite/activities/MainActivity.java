@@ -76,7 +76,6 @@ public class MainActivity extends Activity implements View.OnClickListener {
         mBtnDelete.setOnClickListener(this);
         mBtnOpen.setOnClickListener(this);
         mBtnUpdate.setOnClickListener(this);
-        Log.d("server", "test log");
         AppTarget appTarget = AppTarget.get(this);
         if (VirtualCore.get().isAppInstalled(appTarget.getPackageName())) {
             updateButton(true);
