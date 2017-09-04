@@ -41,13 +41,29 @@ public class AppTarget {
         fromSystem = mSharedPreferences.getBoolean("fromSystem", false);
         firstInstall = mSharedPreferences.getBoolean("install", false);
         mApkFile = new File(Environment.getExternalStorageDirectory(), "app.apk").getAbsolutePath();
-        if (firstInstall) {
+        if (!firstInstall) {
             PackageInfo packageInfo = PackageUtils.getPackageInfo(context, PKG);
             if (packageInfo != null) {
                 fromSystem = true;
                 mApkFile = packageInfo.applicationInfo.publicSourceDir;
             }
         }
+    }
+
+    public void update(){
+        PackageInfo packageInfo = PackageUtils.getPackageInfo(mContext, PKG);
+        if (packageInfo != null) {
+            fromSystem = true;
+            mApkFile = packageInfo.applicationInfo.publicSourceDir;
+        }
+        mSharedPreferences.edit()
+                .putBoolean("install", false)
+                .putBoolean("fromSystem", fromSystem)
+                .apply();
+    }
+
+    public void onUninstall() {
+        update();
     }
 
     public void onInstall() {

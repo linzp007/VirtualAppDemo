@@ -8,11 +8,15 @@ import com.lody.virtual.client.stub.VASettings;
 
 import io.virtualapp.lite.delegate.MyAppRequestListener;
 import io.virtualapp.lite.delegate.MyComponentDelegate;
+import io.virtualapp.lite.delegate.MyPackageObserver;
 import io.virtualapp.lite.delegate.MyPhoneInfoDelegate;
 import io.virtualapp.lite.delegate.MyTaskDescriptionDelegate;
 
 
 public class App extends Application {
+    public static final String ACTION_PACKAGE_ADD = BuildConfig.APPLICATION_ID + ".action.pacakage.add";
+    public static final String ACTION_PACKAGE_UPDATE = BuildConfig.APPLICATION_ID + ".action.pacakage.update";
+    public static final String ACTION_PACKAGE_REMOVE = BuildConfig.APPLICATION_ID + ".action.pacakage.remove";
 
     @Override
     protected void attachBaseContext(Context base) {
@@ -37,6 +41,8 @@ public class App extends Application {
             @Override
             public void onMainProcess() {
                 //TODO 主进程初始化
+                //监听全部插件的安装和卸载
+                virtualCore.registerObserver(new MyPackageObserver(App.this));
             }
 
             @Override
@@ -51,7 +57,7 @@ public class App extends Application {
 
             @Override
             public void onServerProcess() {
-                //app安装/卸载 主进程如果需要知道，请在MyAppRequestListener里面发送广播
+                //服务会通知 通过intent的安装/卸载
                 virtualCore.setAppRequestListener(new MyAppRequestListener(App.this));
                 //允许内部app调用外部的app名单
                 virtualCore.addVisibleOutsidePackage("com.tencent.mobileqq");

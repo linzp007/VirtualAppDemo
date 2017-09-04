@@ -19,7 +19,7 @@ public class CoreService extends Service {
     private class MyBinder extends IServer.Stub {
         @Override
         public ServerBean getInfo() throws RemoteException {
-            ServerBean serverBean = new ServerBean(CoreService.this.getClass().getName(), 1022);
+            ServerBean serverBean = new ServerBean(CoreService.this.getClass().getName(), 233);
             Log.d("server", "getInfo=" + serverBean);
             return serverBean;
         }

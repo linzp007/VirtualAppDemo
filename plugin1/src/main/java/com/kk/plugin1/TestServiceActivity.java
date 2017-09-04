@@ -9,6 +9,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.Toast;
 
 import io.virtualapp.bridge.Config;
 import io.virtualapp.bridge.IServer;
@@ -41,8 +42,15 @@ public class TestServiceActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 if (mServer == null) {
-                    bindService(new Intent(Config.ACTION_BIND_SERVER).setPackage(Config.SERVER_PKG),
-                            mServiceConnection, BIND_AUTO_CREATE);
+                    try {
+                        bindService(new Intent(Config.ACTION_BIND_SERVER).setPackage(Config.SERVER_PKG),
+                                mServiceConnection, BIND_AUTO_CREATE);
+                    } catch (Exception e) {
+                        Log.e("client", "bindService", e);
+                        Toast.makeText(TestServiceActivity.this,
+                                "连接失败:" + e.getMessage(),
+                                Toast.LENGTH_SHORT).show();
+                    }
                 }
             }
         });
