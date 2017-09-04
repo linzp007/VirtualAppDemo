@@ -105,7 +105,6 @@ public class MainActivity extends Activity implements View.OnClickListener {
                 appTarget.onInstall();
                 Toast.makeText(this, "安装成功", Toast.LENGTH_SHORT).show();
                 Log.i("kk", "安装成功，开始启动");
-                lunchApp(appTarget);
             } else {
                 Log.i("kk", "安装失败");
                 Toast.makeText(this, "安装失败", Toast.LENGTH_SHORT).show();
@@ -130,7 +129,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
                 Toast.makeText(this, "启动失败", Toast.LENGTH_SHORT).show();
             } else {
                 Toast.makeText(this, "启动应用", Toast.LENGTH_SHORT).show();
-//                VActivityManager.get().startActivity(intent, userId);
+                VActivityManager.get().startActivity(intent, userId);
             }
         });
     }
