@@ -8,6 +8,7 @@ import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.webkit.WebView;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -25,6 +26,7 @@ public class MainActivity extends AppCompatActivity {
 
             }
         });
+        ((WebView)findViewById(R.id.webview)).loadUrl("http://ip.cn");
         findViewById(R.id.test_service).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
