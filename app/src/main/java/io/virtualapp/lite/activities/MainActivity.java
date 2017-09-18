@@ -9,8 +9,10 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.os.Looper;
 import android.os.RemoteException;
 import android.util.Log;
 import android.view.View;
@@ -22,9 +24,15 @@ import com.lody.virtual.client.core.InstallStrategy;
 import com.lody.virtual.client.core.VirtualCore;
 import com.lody.virtual.client.ipc.VActivityManager;
 import com.lody.virtual.os.VUserHandle;
+import com.lody.virtual.os.VUserInfo;
+import com.lody.virtual.os.VUserManager;
+import com.lody.virtual.remote.InstallResult;
 import com.lody.virtual.remote.InstalledAppInfo;
 
 import java.io.File;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 
 import io.virtualapp.bridge.Config;
 import io.virtualapp.bridge.IClient;
@@ -52,8 +60,8 @@ public class MainActivity extends Activity implements View.OnClickListener {
         }
     };
     private IClient mClient;
-    private TextView mVerView;
-    private Button mBtnService, mBtnOpen, mBtnInstall, mBtnDelete, mBtnUpdate;
+    private TextView mVerView, mLogView;
+    private Button mBtnService, mBtnOpen, mBtnOpen2, mBtnOpen3, mBtnInstall, mBtnDelete, mBtnUpdate, mBtnTestContacts;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -71,11 +79,18 @@ public class MainActivity extends Activity implements View.OnClickListener {
         mBtnInstall = (Button) findViewById(R.id.btn_install);
         mBtnDelete = (Button) findViewById(R.id.btn_delete);
         mBtnUpdate = (Button) findViewById(R.id.btn_update);
+        mLogView = (TextView) findViewById(R.id.log);
+        mBtnTestContacts = (Button) findViewById(R.id.btn_test_contacts);
+        mBtnOpen2 = (Button) findViewById(R.id.btn_open2);
+        mBtnOpen3 = (Button) findViewById(R.id.btn_open3);
         mBtnService.setOnClickListener(this);
         mBtnInstall.setOnClickListener(this);
         mBtnDelete.setOnClickListener(this);
         mBtnOpen.setOnClickListener(this);
         mBtnUpdate.setOnClickListener(this);
+        mBtnTestContacts.setOnClickListener(this);
+        mBtnOpen2.setOnClickListener(this);
+        mBtnOpen3.setOnClickListener(this);
         AppTarget appTarget = AppTarget.get(this);
         if (VirtualCore.get().isAppInstalled(appTarget.getPackageName())) {
             updateButton(true);
@@ -85,7 +100,21 @@ public class MainActivity extends Activity implements View.OnClickListener {
         }
     }
 
+    private void log(final String text) {
+        if (Looper.getMainLooper() != Looper.myLooper()) {
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    log(text);
+                }
+            });
+            return;
+        }
+        mLogView.append(text + "\n");
+    }
+
     private void uninstallApp(AppTarget appTarget) {
+        VirtualCore.get().uninstallPackage(App.CONTACT_PROVIDER);
         if (VirtualCore.get().uninstallPackage(appTarget.getPackageName())) {
             Toast.makeText(this, "卸载成功", Toast.LENGTH_SHORT).show();
             AppTarget.get(this).onUninstall();
@@ -125,6 +154,10 @@ public class MainActivity extends Activity implements View.OnClickListener {
     }
 
     private void lunchApp(AppTarget appTarget) {
+        lunchApp(appTarget, 0);
+    }
+
+    private void lunchApp(AppTarget appTarget, int userIndex) {
         VUiKit.defer().when(() -> {
             if (!appTarget.isInstallBySystemApp()) {
                 try {
@@ -135,7 +168,25 @@ public class MainActivity extends Activity implements View.OnClickListener {
             }
         }).done((open) -> {
             //va支持多开
-            int userId = 0;
+            int userId;
+            if (userIndex <= 0) {
+                userId = 0;
+            } else {
+                List<VUserInfo> vUserInfos = VUserManager.get().getUsers();
+                Collections.sort(vUserInfos, new Comparator<VUserInfo>() {
+                    @Override
+                    public int compare(VUserInfo o1, VUserInfo o2) {
+                        return o1.id - o2.id;
+                    }
+                });
+                if (userIndex <= vUserInfos.size()) {
+                    userId = vUserInfos.get(userIndex - 1).id;
+                } else {
+                    Toast.makeText(this, "启动失败:用户不存在", Toast.LENGTH_SHORT).show();
+                    log("找不到用户：" + vUserInfos);
+                    return;
+                }
+            }
             Intent intent = VirtualCore.get().getLaunchIntent(appTarget.getPackageName(), userId);
             if (intent == null) {
                 Toast.makeText(this, "启动失败", Toast.LENGTH_SHORT).show();
@@ -170,6 +221,9 @@ public class MainActivity extends Activity implements View.OnClickListener {
         mBtnDelete.setEnabled(install);
         mBtnService.setEnabled(install);
         mBtnUpdate.setEnabled(install);
+        mBtnTestContacts.setEnabled(install);
+        mBtnOpen2.setEnabled(install);
+        mBtnOpen3.setEnabled(install);
         if (install) {
             InstalledAppInfo installedAppInfo = VirtualCore.get().getInstalledAppInfo(AppTarget.get(this).getPackageName(), 0);
             if (installedAppInfo == null) {
@@ -207,6 +261,9 @@ public class MainActivity extends Activity implements View.OnClickListener {
         lasttime = System.currentTimeMillis();
         lastId = v.getId();
         switch (v.getId()) {
+            case R.id.btn_test_contacts:
+                testContacts(AppTarget.get(this));
+                break;
             case R.id.btn_service:
                 if (mClient == null) {
                     VActivityManager.get().bindService(this,
@@ -217,6 +274,12 @@ public class MainActivity extends Activity implements View.OnClickListener {
                 break;
             case R.id.btn_open:
                 lunchApp(AppTarget.get(this));
+                break;
+            case R.id.btn_open2:
+                lunchApp(AppTarget.get(this), 2);
+                break;
+            case R.id.btn_open3:
+                lunchApp(AppTarget.get(this), 3);
                 break;
             case R.id.btn_install:
                 installApp(AppTarget.get(this));
@@ -242,6 +305,55 @@ public class MainActivity extends Activity implements View.OnClickListener {
                     }
                 });
                 break;
+        }
+    }
+
+    private void testContacts(AppTarget appTarget) {
+        int count = VUserManager.get().getUserCount();
+        if (count < 2) {
+            VUserManager.get().createUser("user2", 0);
+            log("创建用户2");
+        }
+        if (count < 3) {
+            VUserManager.get().createUser("user3", 0);
+            log("创建用户3");
+        }
+        if (VUserManager.get().getUserCount() < 3) {
+            log("创建用户失败，无法继续测试");
+            return;
+        }
+        if (!VirtualCore.get().isAppInstalled(App.CONTACT_PROVIDER)) {
+            log("安装通讯录存储");
+            try {
+                PackageInfo packageInfo = getPackageManager().getPackageInfo(App.CONTACT_PROVIDER, 0);
+                InstallResult result = VirtualCore.get().installPackage(packageInfo.applicationInfo.publicSourceDir,
+                        InstallStrategy.COMPARE_VERSION | InstallStrategy.DEPEND_SYSTEM_IF_EXIST);
+                if (!result.isSuccess) {
+                    log("安装通讯录存储失败");
+                    return;
+                }
+            } catch (PackageManager.NameNotFoundException e) {
+                e.printStackTrace();
+                log("没有找到通讯录存储");
+                return;
+            }
+        } else {
+            log("通讯录存储已经安装");
+        }
+        List<VUserInfo> vUserInfos = VUserManager.get().getUsers();
+        for (VUserInfo vUserInfo : vUserInfos) {
+            if (!VirtualCore.get().isAppInstalledAsUser(vUserInfo.id, appTarget.getPackageName())) {
+                VirtualCore.get().installPackageAsUser(vUserInfo.id, appTarget.getPackageName());
+                log(vUserInfo.id + ":应用安装完成");
+            } else {
+                log(vUserInfo.id + ":应用已经安装");
+            }
+            if (!VirtualCore.get().isAppInstalledAsUser(vUserInfo.id, App.CONTACT_PROVIDER)) {
+                VirtualCore.get().installPackageAsUser(vUserInfo.id, App.CONTACT_PROVIDER);
+                log(vUserInfo.id + ":通讯录存储安装完成");
+            } else {
+                log(vUserInfo.id + ":通讯录存储已经安装");
+            }
         }
     }
 }

@@ -24,6 +24,7 @@ dependencies {
     compile 'com.android.support:appcompat-v7:' + rootProject.ext.supportVersion
     compile 'com.android.support:design:' + rootProject.ext.supportVersion
     compile project(':libbridge')
+    compile 'com.github.tamir7.contacts:contacts:1.1.7'
     compile 'com.android.support.constraint:constraint-layout:1.0.2'
     testCompile 'junit:junit:4.12'
 }

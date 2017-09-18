@@ -17,6 +17,7 @@ public class App extends Application {
     public static final String ACTION_PACKAGE_ADD = BuildConfig.APPLICATION_ID + ".action.pacakage.add";
     public static final String ACTION_PACKAGE_UPDATE = BuildConfig.APPLICATION_ID + ".action.pacakage.update";
     public static final String ACTION_PACKAGE_REMOVE = BuildConfig.APPLICATION_ID + ".action.pacakage.remove";
+    public static final String CONTACT_PROVIDER = "com.android.providers.contacts";
 
     @Override
     protected void attachBaseContext(Context base) {

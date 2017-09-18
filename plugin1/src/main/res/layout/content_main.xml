@@ -37,5 +37,11 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Test Camera"/>
+
+        <TextView
+            android:id="@+id/tv_contacts"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minLines="5"/>
     </LinearLayout>
 </android.support.constraint.ConstraintLayout>

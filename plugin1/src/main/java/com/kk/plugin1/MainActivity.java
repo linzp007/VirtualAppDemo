@@ -5,19 +5,27 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Looper;
 import android.provider.MediaStore;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.webkit.WebView;
+import android.widget.TextView;
+
+import com.github.tamir7.contacts.ContactData;
+import com.github.tamir7.contacts.Contacts;
+import com.github.tamir7.contacts.QueryPlus;
+import com.github.tamir7.contacts.Update;
 
 import java.io.File;
-import java.util.Date;
 
 public class MainActivity extends AppCompatActivity {
+    TextView mContactText;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -25,7 +33,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-
+        Contacts.initialize(this);
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -33,6 +41,7 @@ public class MainActivity extends AppCompatActivity {
 
             }
         });
+        mContactText = (TextView) findViewById(R.id.tv_contacts);
         ((WebView) findViewById(R.id.webview)).loadUrl("http://ip.cn");
         findViewById(R.id.test_service).setOnClickListener(new View.OnClickListener() {
             @Override
@@ -50,13 +59,39 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-                String photofileName = "IMG_" + new Date() + ".jpg";
                 File imgFile = new File(Environment.getExternalStorageDirectory(),
-                        "tempWhy/" + photofileName);
+                        "Download/IMG_" + System.currentTimeMillis() + ".jpg");
+                if (!imgFile.getParentFile().exists()) {
+                    imgFile.getParentFile().mkdirs();
+                }
                 intent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(imgFile));
                 startActivityForResult(intent, 1111);
             }
         });
+        try {
+            QueryPlus query = new QueryPlus(this);
+            final int count = query.count();
+            printf("contacts count:" + count);
+            if (count == 0) {
+                Update update = new Update(this);
+                update.insert(new ContactData("hello", "10086"));
+            }
+        } catch (Exception e) {
+            printf("contacts:\n" + Log.getStackTraceString(e));
+        }
+    }
+
+    private void printf(final String text) {
+        if (Looper.getMainLooper() != Looper.myLooper()) {
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    printf(text);
+                }
+            });
+            return;
+        }
+        mContactText.append(text + "\n");
     }
 
     @Override
