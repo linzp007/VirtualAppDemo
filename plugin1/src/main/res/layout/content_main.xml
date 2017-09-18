@@ -31,5 +31,11 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Test Notification"/>
+
+        <Button
+            android:id="@+id/test_camera"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Test Camera"/>
     </LinearLayout>
 </android.support.constraint.ConstraintLayout>
