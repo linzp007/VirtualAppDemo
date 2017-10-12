@@ -9,7 +9,6 @@ import com.lody.virtual.client.stub.VASettings;
 import io.virtualapp.lite.delegate.MyAppRequestListener;
 import io.virtualapp.lite.delegate.MyComponentDelegate;
 import io.virtualapp.lite.delegate.MyPackageObserver;
-import io.virtualapp.lite.delegate.MyPhoneInfoDelegate;
 import io.virtualapp.lite.delegate.MyTaskDescriptionDelegate;
 
 
@@ -49,7 +48,6 @@ public class App extends Application {
                 //activity生命周期监听
                 virtualCore.setComponentDelegate(new MyComponentDelegate());
                 //信息伪造
-                virtualCore.setPhoneInfoDelegate(new MyPhoneInfoDelegate());
                 //任务历史显示,activity启动的intent处理（不显示任务）
                 virtualCore.setTaskDescriptionDelegate(new MyTaskDescriptionDelegate());
             }
